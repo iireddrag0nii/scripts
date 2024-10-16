@@ -17,3 +17,4 @@ Note: please make sure appropiate ports are opened from your router. You will ne
 
 Wireguard UI should be accessible from http://your_ip:51821.
 Pi-Hole UI should be accessible from http://your_ip/admin.
+Portainer UI should be accessible from https://your_ip:9443.
