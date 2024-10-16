@@ -15,5 +15,5 @@ If done correctly, all 4 services should be installed and ready to go.
 
 Note: please make sure appropiate ports are opened from your router. You will need to open 51280 for wireguard. 
 
-Wireguard UI should be accessible from http://your_ip:51821
-Pi-Hole UI should be accessible from http://your_ip/admin
+Wireguard UI should be accessible from http://your_ip:51821.
+Pi-Hole UI should be accessible from http://your_ip/admin.
