@@ -84,3 +84,32 @@ Runtime deployment and persistence across recreation
 must be validated before release.
 
 Only deploy on systems you are authorized to administer.
+
+## First Successful Runtime Validation
+
+Test platform:
+- Ubuntu Server 22.04.2 LTS
+- AMD64
+- Docker Engine 29.10.1
+- Docker Compose 5.8.0
+- Portainer Community Edition 2.45.4 LTS
+
+Validation results:
+- All six Compose configuration checks passed
+- Portainer image downloaded successfully
+- Container started successfully
+- HTTPS endpoint returned HTTP 200
+- Initial administrator setup completed
+- Local Docker environment connected successfully
+- Container recreation using --force-recreate succeeded
+- Administrator configuration persisted
+- Local Docker environment remained available
+- HTTPS host binding remained localhost-only
+
+Conclusion:
+
+The Portainer Compose deployment passed its first end-to-end
+runtime validation on the Ubuntu 22.04 AMD64 lab VM.
+
+Additional operating systems, architectures, image versions,
+and recovery scenarios remain untested.
