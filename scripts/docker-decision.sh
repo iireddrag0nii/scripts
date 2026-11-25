@@ -32,20 +32,43 @@ if command -v systemctl >/dev/null 2>&1; then
     systemctl is-active --quiet docker && service=1
 fi
 
+installed_packages=()
+review_packages=()
+
 if command -v dpkg-query >/dev/null 2>&1; then
     for pkg in docker-ce docker-ce-cli docker.io \
                docker-compose-plugin docker-compose-v2 \
-               containerd.io containerd runc \
-               podman-docker; do
+               docker-compose containerd.io containerd \
+               runc podman-docker; do
+
         if dpkg-query -W -f='${Status}' "$pkg" 2>/dev/null |
             grep -qx 'install ok installed'; then
+
             packages=1
+            installed_packages+=("$pkg")
+
+            case "$pkg" in
+                docker.io|docker-compose-v2|docker-compose|containerd|runc|podman-docker)
+                    review_packages+=("$pkg")
+                    ;;
+            esac
         fi
     done
 fi
 
-arch="$(uname -m 2>/dev/null || printf 'unknown')"
+echo "Installed runtime packages:"
+if (( ${#installed_packages[@]} )); then
+    printf '  - %s\n' "${installed_packages[@]}"
+else
+    echo "  None detected by dpkg"
+fi
 
+if (( ${#review_packages[@]} )); then
+    echo "Packages requiring installation-path review:"
+    printf '  - %s\n' "${review_packages[@]}"
+fi
+
+arch="$(uname -m 2>/dev/null || printf 'unknown')"
 printf 'Architecture: %s\n' "$arch"
 printf 'OS: %s %s\n' "$os_id" "$os_version"
 printf 'Docker CLI: %s | Compose: %s\n' "$docker_cli" "$compose"
@@ -62,6 +85,9 @@ elif [[ ! " 22.04 24.04 26.04 26.10 " =~ " $os_version " ]]; then
 elif [[ "$arch" != "x86_64" && "$arch" != "aarch64" ]]; then
     echo "DECISION: MANUAL_REVIEW"
     echo "Reason: CPU architecture has not been validated."
+elif (( ${#review_packages[@]} > 0 )); then
+    echo "DECISION: MANUAL_REVIEW"
+    echo "Reason: Existing runtime packages require installation-path review."
 elif (( docker_cli && compose && daemon && service )); then
     echo "DECISION: SKIP_INSTALL"
     echo "Reason: Docker Engine and Compose are functioning."

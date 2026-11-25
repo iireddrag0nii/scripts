@@ -25,10 +25,36 @@ MOCK
 
 cat > "$TMP/bin/dpkg-query" <<'MOCK'
 #!/bin/bash
+pkg="${@: -1}"
+
 case "${SCENARIO:-}" in
-    fresh) exit 1 ;;
-    *) printf 'install ok installed' ;;
+    fresh)
+        exit 1
+        ;;
+    packages_only)
+        [[ "$pkg" == "docker.io" ]] || exit 1
+        ;;
+    mixed)
+        case "$pkg" in
+            docker-ce|docker-ce-cli|docker-compose-plugin|containerd.io|docker.io)
+                ;;
+            *)
+                exit 1
+                ;;
+        esac
+        ;;
+    *)
+        case "$pkg" in
+            docker-ce|docker-ce-cli|docker-compose-plugin|containerd.io)
+                ;;
+            *)
+                exit 1
+                ;;
+        esac
+        ;;
 esac
+
+printf 'install ok installed'
 MOCK
 
 cat > "$TMP/bin/docker" <<'MOCK'
@@ -86,6 +112,20 @@ run_test installed SKIP_INSTALL
 run_test noaccess MANUAL_REVIEW
 run_test partial MANUAL_REVIEW
 run_test packages_only MANUAL_REVIEW
+run_test mixed MANUAL_REVIEW
+
+# Verify that the package inventory identifies the alternative runtime.
+package_output=$(SCENARIO=packages_only PATH="$TMP/no-docker" \
+    /bin/bash "$ROOT/scripts/docker-decision.sh")
+
+if grep -Fxq "  - docker.io" <<< "$package_output" &&
+   grep -Fq "Packages requiring installation-path review:" \
+       <<< "$package_output"; then
+    echo "[PASS] docker.io identified for installation-path review"
+else
+    echo "[FAIL] docker.io package review not reported"
+    exit 1
+fi
 run_test fresh FRESH_CANDIDATE
 
 echo
@@ -128,4 +168,4 @@ run_test installed SKIP_INSTALL aarch64
 run_test installed MANUAL_REVIEW armv7l
 
 echo
-echo "All ten decision tests passed."
+echo "All eleven decision scenarios passed."
