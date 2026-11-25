@@ -1,0 +1,26 @@
+# Environment files and secrets
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.p12
+*.pfx
+secrets/
+credentials/
+
+# Logs and temporary files
+*.log
+*.tmp
+*.swp
+*.bak
+*.save
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Editor files
+.vscode/
+.idea/
+.DS_Store
