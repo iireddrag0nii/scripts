@@ -1,0 +1,163 @@
+# Version 2.0 Release Validation Checklist
+
+HBTECHSOLUTIONS Infrastructure Deployment Toolkit
+
+Status: PENDING CLEAN-HOST VALIDATION
+
+## Test Environment
+
+Record before testing:
+
+- Date:
+- Tester:
+- Ubuntu version:
+- Kernel version:
+- CPU architecture:
+- VM CPU / RAM / disk:
+- Repository commit:
+- Docker Engine version:
+- Docker Compose version:
+- Host LAN IP:
+
+Use a disposable VM or an approved test host with
+an understood backup and recovery plan.
+
+Never perform destructive testing on a machine hosting
+unrelated workloads or irreplaceable data.
+
+## 1. Fresh Host Assessment
+
+- [ ] Confirm Ubuntu is freshly installed
+- [ ] Record baseline disk, memory, and networking
+- [ ] Verify Docker is initially absent
+- [ ] Clone the repository
+- [ ] Switch to development/v2
+- [ ] Run host readiness assessment
+- [ ] Confirm Docker installer reports FRESH_CANDIDATE
+- [ ] Confirm no unintended host changes
+
+## 2. Docker Installation
+
+- [ ] Select menu option 2
+- [ ] Review installation plan
+- [ ] Confirm installation explicitly
+- [ ] Verify Docker Engine starts
+- [ ] Verify Docker Compose and Buildx
+- [ ] Run hello-world successfully
+- [ ] Repeat option 2
+- [ ] Verify existing installation is skipped
+
+## 3. Portainer
+
+- [ ] Select menu option 3
+- [ ] Review Docker socket security
+- [ ] Confirm deployment explicitly
+- [ ] Verify container is running
+- [ ] Verify HTTPS on localhost port 9443
+- [ ] Verify administrator setup
+- [ ] Recreate container without removing volumes
+- [ ] Verify configuration persists
+- [ ] Repeat menu option 3
+- [ ] Verify installation is skipped
+
+## 4. Pi-hole
+
+- [ ] Select menu option 4
+- [ ] Confirm deployment explicitly
+- [ ] Verify container health
+- [ ] Verify TCP and UDP DNS on localhost port 5353
+- [ ] Verify web interface on localhost port 8088
+- [ ] Verify an ordinary DNS lookup
+- [ ] Verify blocking of a test domain
+- [ ] Recreate container without deleting volumes
+- [ ] Verify DNS settings and blocklist persist
+- [ ] Repeat menu option 4
+- [ ] Verify installation is skipped
+- [ ] Confirm host and router DNS remain unchanged
+
+## 5. WireGuard
+
+- [ ] Confirm kernel WireGuard support
+- [ ] Confirm UDP port 51821 is available
+- [ ] Confirm VPN subnet does not conflict
+- [ ] Select menu option 5
+- [ ] Supply the approved server LAN IPv4 address
+- [ ] Confirm deployment explicitly
+- [ ] Verify local .env is created with mode 600
+- [ ] Verify .env is ignored by Git
+- [ ] Verify container starts and wg0 is active
+- [ ] Verify server and peer configurations are generated
+- [ ] Import peer configuration into a trusted client
+- [ ] Verify authenticated handshake
+- [ ] Verify client can reach 10.77.77.1
+- [ ] Verify prohibited forwarding is blocked
+- [ ] Verify forwarding DROP counters increase
+- [ ] Restore narrow client AllowedIPs
+- [ ] Recreate container without deleting volumes
+- [ ] Verify server identity and peer connectivity persist
+- [ ] Repeat menu option 5
+- [ ] Verify existing installation is skipped
+
+Do not publish private keys, peer configuration files,
+QR codes, or sensitive VPN diagnostics.
+
+## 6. Safety and Recovery
+
+- [ ] Verify non-root deployment attempts are blocked
+- [ ] Verify declined confirmations make no changes
+- [ ] Verify occupied ports prevent new deployments
+- [ ] Verify existing projects are never overwritten
+- [ ] Verify persistent volumes are retained
+- [ ] Test an interrupted installation in a disposable lab
+- [ ] Verify failed WireGuard .env recovery is documented
+- [ ] Verify no unintended router or host DNS changes
+- [ ] Verify no unrelated container modifications
+
+## 7. Automated Regression Tests
+
+Run the tests from the repository root:
+
+    ./tests/test-toolkit-menu.sh
+    ./tests/test-docker-decision.sh
+    ./tests/test-install-docker.sh
+    ./tests/test-portainer-compose.sh
+    python3 tests/test-portainer-conflicts.py
+    python3 tests/test-pihole-compose.py
+    python3 tests/test-pihole-conflicts.py
+    python3 tests/test-wireguard-compose.py
+    python3 tests/test-wireguard-isolation.py
+    python3 tests/test-wireguard-conflicts.py
+    python3 tests/test-wireguard-menu.py
+    python3 tests/test-wireguard-deployment.py
+    python3 tests/test-wireguard-env.py
+
+- [ ] All applicable tests pass
+- [ ] No unexpected failures or skipped critical tests
+- [ ] Git whitespace validation passes
+- [ ] No secrets or generated keys are staged
+
+## 8. Release Review
+
+- [ ] README reflects implemented functionality
+- [ ] Installation guide matches tested steps
+- [ ] Security boundaries and limitations are documented
+- [ ] Service guides match observed deployments
+- [ ] Container image digests are reviewed
+- [ ] Supported platforms are accurately described
+- [ ] Known issues and recovery limitations are recorded
+- [ ] Development branch is clean
+- [ ] Release commit is identified
+- [ ] Main branch merge is approved
+- [ ] Release tag and GitHub release notes are prepared
+
+## Final Result
+
+- Result: PENDING
+- Date:
+- Validated commit:
+- Known limitations:
+- Outstanding issues:
+- Release decision: HOLD
+
+Do not mark the release approved until all required
+checks pass or exceptions are explicitly documented.

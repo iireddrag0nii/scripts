@@ -2,11 +2,15 @@
 
 ## Development Status
 
-Infrastructure Deployment Toolkit v2.0 is under development.
+Version 2.0 is in pre-release validation.
 
-The currently available component is the read-only host
-readiness assessment. Automated installation and deployment
-are not yet implemented.
+The toolkit includes guarded, interactive deployment for
+Docker Engine, Portainer, Pi-hole, and WireGuard.
+
+Each module has been validated individually on an Ubuntu
+Server 22.04 AMD64 laboratory VM.
+
+Final clean-host end-to-end testing remains pending.
 
 ## Intended Environment
 
@@ -17,7 +21,7 @@ Initial validation environment:
 
 - Ubuntu 22.04.5 LTS
 - x86_64 architecture
-- Docker Engine 29.10.0
+- Docker Engine 29.10.1
 - Docker Compose 5.8.0
 
 These are test-environment details, not minimum supported
@@ -159,8 +163,8 @@ The installer supports these modes:
     sudo ./scripts/install-docker.sh --install
 
 Installation mode modifies the host and requires explicit
-interactive confirmation. Use it only on an approved test
-system with a verified recovery snapshot.
+interactive confirmation. Use it only on an approved system after reviewing
+backups, recovery options, and installation risks.
 
 The installer refuses to install when the decision engine
 reports SKIP_INSTALL or MANUAL_REVIEW.
@@ -187,9 +191,83 @@ make a readiness assessment pass.
 
 ## Deployment
 
-The Docker installation workflow and independent Compose
-stacks for Portainer, wg-easy, and Pi-hole will be added
-after implementation and validation.
+Clone the repository and select the development branch:
 
-Do not use the archived scripts in legacy/ as current
-production installers.
+    git clone https://github.com/iireddrag0nii/scripts.git
+    cd scripts
+    git switch development/v2
+
+Run the read-only preflight assessment:
+
+    ./scripts/preflight.sh
+
+Launch the interactive toolkit:
+
+    sudo ./toolkit.sh
+
+The menu provides these deployment actions:
+
+1. Check host readiness
+2. Install Docker Engine
+3. Deploy Portainer
+4. Deploy Pi-hole
+5. Deploy WireGuard
+6. View deployment status
+7. Exit
+
+Deploy Docker Engine before the containerized services.
+
+### Portainer
+
+Portainer publishes HTTPS on localhost port 9443.
+
+See [Portainer Deployment](PORTAINER.md).
+
+### Pi-hole
+
+Pi-hole publishes DNS on localhost port 5353
+(TCP and UDP) and its web interface on port 8088.
+
+The toolkit does not change host or router DNS settings.
+
+See [Pi-hole Deployment](PIHOLE.md).
+
+### WireGuard
+
+WireGuard uses a configurable LAN bind address and
+UDP port 51821.
+
+The default tunnel subnet is 10.77.77.0/24.
+
+The server restricts forwarding to other networks.
+This is a tunnel-only laboratory configuration.
+
+New deployments generate a local configuration file:
+
+    compose/wireguard/.env
+
+This file is excluded from Git and created with
+restrictive permissions.
+
+See [WireGuard Deployment](WIREGUARD.md).
+
+### Repeat-run behavior
+
+The toolkit detects existing service projects and
+skips their installation rather than automatically
+recreating containers or deleting persistent volumes.
+
+Review the individual deployment guides before making
+changes to an existing installation.
+
+## Current validation limitations
+
+- Full clean-host sequential deployment remains pending.
+- Initial runtime testing used Ubuntu Server 22.04 AMD64.
+- Other architectures require additional runtime testing.
+- Recovery from interrupted installations requires review.
+- WireGuard's default configuration is not a full-access VPN.
+- Pinned images require scheduled security review.
+
+The archived scripts under legacy/ are unmaintained
+and should not be used as current production installers.

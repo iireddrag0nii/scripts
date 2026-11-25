@@ -1,106 +1,183 @@
 # HBTECHSOLUTIONS Infrastructure Deployment Toolkit
 
-A modular deployment toolkit for Linux homelabs, infrastructure labs, and self-hosted environments.
+A modular infrastructure deployment toolkit for Linux
+homelabs, engineering labs, and self-hosted environments.
 
-**Version:** 2.0 (in development)
-**Status:** Pre-release — service deployment automation is not yet available.
+**Version:** 2.0 (pre-release)
+**Branch:** development/v2
+**Status:** Four core modules implemented and lab-validated.
+Final clean-host installation testing is pending.
 
 ## Overview
 
-This project began as a collection of scripts designed to simplify installing Docker, Portainer, WireGuard, and Pi-hole.
+The HBTECHSOLUTIONS Infrastructure Deployment Toolkit
+provides guarded, optional installation workflows for:
 
-Version 2.0 focuses on:
+- Docker Engine and Docker Compose
+- Portainer Community Edition
+- Pi-hole DNS filtering
+- WireGuard VPN
 
-- Reproducible deployments
-- Modular Docker Compose configurations
-- Secure credential management
-- Readiness assessments before installation
-- Deployment validation and troubleshooting
-- Documentation and recovery procedures
+Each component is deployed independently through an
+interactive Bash menu.
 
-## Project Status
+The toolkit focuses on deployment safety, persistent
+configuration, repeat-run protection, and validation.
+
+## Current Module Status
 
 | Component | Status |
 |---|---|
-| Original scripts archive | Complete |
-| Read-only preflight assessment | Initial version validated |
-| Docker published-port inventory | Basic version implemented |
-| Docker installation workflow | Planned |
-| Portainer Compose deployment | Planned |
-| WireGuard / wg-easy deployment | Planned |
-| Pi-hole Compose deployment | Planned |
-| Automated deployment validation | Planned |
+| Host readiness assessment | Implemented and tested |
+| Docker Engine installation | Lab-validated |
+| Portainer deployment | Lab-validated |
+| Pi-hole deployment | Lab-validated |
+| WireGuard deployment | Lab-validated |
+| Automated regression tests | Implemented |
+| Clean-host end-to-end testing | Pending |
+| Public v2.0 release | Pending |
 
-**No production-ready service installer is included in v2 yet.**
+The individual modules have been tested on Ubuntu Server
+22.04 AMD64. Additional distributions and architectures
+have not yet received equivalent runtime validation.
 
 ## Quick Start
 
-Clone the repository using:
+Clone the repository:
 
-`git clone https://github.com/iireddrag0nii/scripts.git`
+    git clone https://github.com/iireddrag0nii/scripts.git
 
-Enter the repository:
+Enter the repository and select the development branch:
 
-`cd scripts`
+    cd scripts
+    git switch development/v2
 
-Switch to the development branch when it has been published:
+Run a host readiness assessment:
 
-`git switch development/v2`
+    ./scripts/preflight.sh
 
-Check the preflight script's syntax:
+Launch the interactive toolkit:
 
-`bash -n scripts/preflight.sh`
+    ./toolkit.sh
 
-Run the read-only assessment:
+Elevated privileges are required for service deployments:
 
-`./scripts/preflight.sh`
+    sudo ./toolkit.sh
 
-To include the Docker container inventory when elevated permissions are required:
+### Interactive Menu
 
-`sudo ./scripts/preflight.sh`
+    1. Check host readiness
+    2. Install Docker Engine
+    3. Deploy Portainer
+    4. Deploy Pi-hole
+    5. Deploy WireGuard
+    6. View deployment status
+    7. Exit
 
-The script does not install software or modify running services.
+Review deployment plans, prerequisites, port bindings,
+and confirmation prompts before installing services.
 
-A successful assessment does not guarantee deployment compatibility.
+Do not run the toolkit on a production host without
+reviewing its configuration and security implications.
 
-## Planned Components
+## Deployment Modules
 
 ### Docker Engine
 
-Documented installation and verification workflow.
+Guarded installation through Docker's official Ubuntu
+APT repository.
+
+Includes runtime detection, compatibility checks,
+manual-review decisions, and repeat-run protection.
 
 ### Portainer
 
-Independent container-management deployment.
+Container-management interface with persistent storage.
 
-### WireGuard / wg-easy
-
-VPN deployment with configurable networking and restricted administration.
+The HTTPS management port is published to localhost.
+Administrator access to the Docker socket is sensitive
+and must be treated as host-level administrative access.
 
 ### Pi-hole
 
-Containerized DNS filtering with persistent configuration.
+Containerized DNS filtering with persistent settings.
 
-Each deployment will be optional.
+The default configuration publishes DNS and the web
+dashboard to localhost only.
+
+It does not automatically change host or router DNS.
+
+### WireGuard
+
+Containerized VPN server using LinuxServer.io's image.
+
+The default lab configuration uses UDP port 51821,
+persistent VPN keys, restricted forwarding, and
+an explicit LAN bind address.
+
+VPN client configuration and private keys must
+never be committed to the repository.
+
+## Container Image Management
+
+Service images are pinned to immutable registry digests.
+
+This prevents automatic image changes during deployment.
+
+Pinned images must be periodically reviewed for
+security updates. Updating a digest requires
+validation of the replacement image.
+
+## Security and Deployment Boundaries
+
+- Review configurations before deployment
+- No automatic router port forwarding
+- No automatic host DNS changes
+- Existing toolkit deployments are detected and skipped
+- Persistent data volumes are retained
+- WireGuard endpoint settings remain local to each host
+- VPN private keys must not be publicly shared
+- Service deployment requires explicit confirmation
+
+The toolkit is intended for authorized infrastructure
+administration, education, and controlled lab use.
+
+It is not yet certified or hardened for production use.
 
 ## Documentation
 
 - [Installation and prerequisites](docs/INSTALLATION.md)
+- [Docker validation](docs/DOCKER-VALIDATION.md)
+- [Portainer guide](docs/PORTAINER.md)
+- [Pi-hole guide](docs/PIHOLE.md)
+- [WireGuard guide](docs/WIREGUARD.md)
+- [Release validation checklist](docs/RELEASE-VALIDATION.md)
 - [Security guidance](SECURITY.md)
-- [Change history](CHANGELOG.md)
-- [Original scripts](legacy/README.md)
+- [Changelog](CHANGELOG.md)
+- [Legacy scripts](legacy/README.md)
 
 ## Legacy Scripts
 
-The original installation scripts are preserved in the `legacy/` directory for historical reference.
+The original repository scripts are preserved under
+legacy/ for historical reference.
 
-They are unmaintained and should not be used for current production deployments.
+They are unmaintained and should not be used for
+current production deployments.
 
-## Development and Validation
+## Release Validation
 
-Development uses isolated lab environments and read-only assessments of existing Linux systems.
+Before the public v2.0 release, the toolkit will undergo
+a complete clean-host installation test covering:
 
-All deployment components must be tested before being described as supported.
+1. Ubuntu readiness and Docker installation
+2. Portainer deployment and persistence
+3. Pi-hole DNS filtering and persistence
+4. WireGuard VPN connectivity and isolation
+5. Repeat-run behavior and deployment safeguards
+6. Documentation and recovery procedures
+
+The release will remain in development until
+these checks are complete.
 
 ## Project Website
 
@@ -108,6 +185,7 @@ https://www.hbtechsolutions.com
 
 ## Disclaimer
 
-This toolkit is provided for education and authorized infrastructure administration.
+Provided as-is for educational and authorized
+infrastructure administration purposes.
 
-Review all commands, configurations, and security implications before use.
+Review all commands and security implications before use.

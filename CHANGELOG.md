@@ -3,6 +3,85 @@
 All notable changes to the HBTECHSOLUTIONS Infrastructure
 Deployment Toolkit will be documented here.
 
+## Version 2.0 Pre-Release Milestones
+
+The four core deployment modules have been implemented
+and individually validated on an Ubuntu Server 22.04
+AMD64 laboratory virtual machine.
+
+Final clean-host end-to-end validation remains pending.
+
+### Infrastructure Deployment
+
+- Implemented interactive deployment menu
+- Added guarded Docker Engine installation
+- Added independent Portainer Compose deployment
+- Added independent Pi-hole Compose deployment
+- Added restricted WireGuard VPN deployment
+- Added existing-installation detection for each module
+- Added explicit deployment confirmation
+- Added persistent service configuration
+
+### Security and Reliability
+
+- Implemented TCP and UDP port-conflict checks
+- Added Docker runtime and host readiness validation
+- Restricted Portainer management access to localhost
+- Restricted Pi-hole DNS and web ports to localhost
+- Added WireGuard tunnel-only forwarding rules
+- Added WireGuard LAN endpoint validation
+- Added safeguards against overwriting VPN configuration
+- Added local WireGuard endpoint configuration with
+  restrictive file permissions and Git exclusion
+- Pinned service images to reviewed immutable digests
+
+### Runtime Validation
+
+- Installed Docker Engine on a fresh Ubuntu VM
+- Verified Docker repeat-run detection
+- Validated Portainer HTTPS and persistent configuration
+- Validated Pi-hole DNS resolution and filtering
+- Established a Windows-to-WireGuard VPN handshake
+- Verified WireGuard tunnel endpoint connectivity
+- Verified blocked forwarding toward test Docker networks
+- Verified WireGuard identity persistence after recreation
+- Verified existing WireGuard deployment is skipped
+
+### Automated Testing
+
+- Added Docker installation and decision tests
+- Added Portainer configuration and conflict tests
+- Added Pi-hole configuration and conflict tests
+- Added WireGuard configuration and isolation tests
+- Added WireGuard deployment safeguard tests
+- Added WireGuard endpoint-persistence tests
+- Added menu regression tests
+
+### Documentation
+
+- Updated the README for the current v2.0 architecture
+- Documented Docker installation and validation
+- Documented Portainer deployment
+- Documented Pi-hole deployment and DNS verification
+- Documented WireGuard deployment and security boundaries
+- Preserved the original scripts under legacy/
+
+### Outstanding Release Validation
+
+- Complete clean-host installation through the menu
+- Verify all components together after fresh deployment
+- Validate failed-installation recovery procedures
+- Finalize supported platform and architecture claims
+- Review security guidance and documentation
+- Merge development/v2 into main after approval
+
+The development history below is retained for reference.
+Earlier statements describing service installation as
+planned or disabled have been superseded by the
+pre-release milestones above.
+
+---
+
 ## Unreleased - Version 2.0 Development
 
 ### Added
