@@ -120,7 +120,7 @@ and installations outside the inspected locations may require additional investi
 
 FRESH_CANDIDATE is an advisory result, not authorization to install.
 
-The --install option remains disabled.
+The --install option is enabled with safety gates and interactive confirmation.
 
 No software is installed or modified by the planner.
 
@@ -145,6 +145,28 @@ dedicated automated socket-fixture test.
 
 Rootless and custom installations may require additional
 manual inspection.
+
+## Validated Docker Installation
+
+The guarded Docker Engine installation workflow has
+completed its first successful lab validation on
+Ubuntu Server 22.04 AMD64.
+
+The installer supports these modes:
+
+    ./scripts/install-docker.sh --plan
+    ./scripts/install-docker.sh --dry-run
+    sudo ./scripts/install-docker.sh --install
+
+Installation mode modifies the host and requires explicit
+interactive confirmation. Use it only on an approved test
+system with a verified recovery snapshot.
+
+The installer refuses to install when the decision engine
+reports SKIP_INSTALL or MANUAL_REVIEW.
+
+See [Docker Installation Validation](DOCKER-VALIDATION.md)
+for the full first-deployment record and limitations.
 
 ## Troubleshooting
 

@@ -38,6 +38,20 @@ Deployment Toolkit will be documented here.
 - Verified standard Docker CE remains classified as SKIP_INSTALL
 - Kept all installation operations disabled
 
+### First Real Docker Installation Validation
+
+- Validated guarded installation on Ubuntu Server 22.04 AMD64
+- Verified FRESH_CANDIDATE on an initially Docker-free VM
+- Installed Docker Engine 29.10.1 from Docker's official APT repository
+- Verified Docker Compose 5.8.0 and Buildx 0.39.1
+- Verified containerd 2.4.2
+- Successfully executed the Docker hello-world container
+- Verified a second installer execution returned SKIP_INSTALL
+- Confirmed the installer left general Ubuntu package upgrades outside its scope
+
+Validation remains limited to one fresh Ubuntu 22.04 AMD64 VM.
+Other operating systems, architectures, and recovery scenarios require testing.
+
 ### Fixed
 
 - Corrected local listening port detection in ss output
