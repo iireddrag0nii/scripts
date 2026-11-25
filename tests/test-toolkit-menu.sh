@@ -59,7 +59,7 @@ fi
 # the menu must display the decision and reason for blocking.
 if (( EUID != 0 )) && command -v docker >/dev/null 2>&1; then
     if ! docker info >/dev/null 2>&1; then
-        output="$(printf '2\\n7\\n' | bash "$TOOLKIT")"
+        output="$(printf '%s\n' 2 7 | bash "$TOOLKIT")"
         check "Docker assessment failure is visible" \
             "[BLOCKED] Docker assessment returned exit code 2." "$output"
     fi
