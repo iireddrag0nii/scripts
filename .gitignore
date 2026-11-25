@@ -24,3 +24,6 @@ __pycache__/
 .vscode/
 .idea/
 .DS_Store
+
+# Local WireGuard endpoint configuration
+/compose/wireguard/.env

@@ -61,23 +61,64 @@ The toolkit will:
 
 Canceling the confirmation leaves deployment unchanged.
 
-## Direct Compose administration
+## Local endpoint configuration
 
-Set the endpoint variables in the current shell:
+New installations create:
 
-    export WG_BIND_IP=192.168.4.82
-    export WG_SERVER_URL=192.168.4.82
+    compose/wireguard/.env
 
-Replace these example values with your host's LAN address.
+Example contents:
 
-Run administrative Compose commands with:
+    WG_BIND_IP=192.168.4.82
+    WG_SERVER_URL=192.168.4.82
 
-    sudo -E docker compose -f compose/wireguard/compose.yaml ps
+The example address must be replaced with the actual
+server LAN IPv4 address.
 
-    sudo -E docker compose -f compose/wireguard/compose.yaml logs --tail=40
+The installer creates this file only after explicit
+deployment confirmation.
 
-The variables must be supplied whenever Compose evaluates
-this file. The toolkit handles them during initial deployment.
+Security and recovery behavior:
+
+- The file is created with permissions 600.
+- The file is excluded from Git.
+- Existing files and symlinks are never overwritten.
+- Cancellation does not create a file.
+- Existing WireGuard projects are skipped unchanged.
+- A failed Docker startup may leave the file for recovery.
+
+If installation fails after configuration creation,
+inspect Docker and the existing .env file before retrying.
+
+Do not delete the persistent WireGuard volume to resolve
+an endpoint configuration problem.
+
+### Existing installations
+
+Installations created before endpoint persistence was
+introduced do not automatically receive a local .env.
+
+To configure an existing installation, first verify its
+published UDP port and configured server endpoint.
+
+Then create compose/wireguard/.env manually with the
+matching address values and restrict permissions to 600.
+
+This does not require recreating the VPN container.
+
+### Direct Compose administration
+
+From the repository root:
+
+    sudo docker compose --env-file compose/wireguard/.env -f compose/wireguard/compose.yaml ps
+
+    sudo docker compose --env-file compose/wireguard/.env -f compose/wireguard/compose.yaml logs --tail=40
+
+Use the same --env-file option for future Compose
+administration commands.
+
+The toolkit manages the endpoint file during initial
+deployment. Never commit environment-specific settings.
 
 ## Verify the server
 

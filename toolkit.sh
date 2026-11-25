@@ -213,6 +213,14 @@ wireguard_deploy() {
         return 0
     fi
 
+    local env_file="$ROOT/compose/wireguard/.env"
+
+    if [[ -e "$env_file" || -L "$env_file" ]]; then
+        echo "[BLOCKED] Existing WireGuard .env file detected."
+        echo "Review the configuration before retrying."
+        return 2
+    fi
+
     local bind_ip
     read -r -p "Enter the server LAN IPv4 address: " bind_ip || {
         echo "[CANCELLED] No deployment performed."
@@ -250,14 +258,25 @@ wireguard_deploy() {
         return 0
     fi
 
-    if ! WG_BIND_IP="$bind_ip" WG_SERVER_URL="$bind_ip" \
-        docker compose -f "$WIREGUARD" up -d; then
+    # Create the local endpoint file without overwriting an existing file.
+    if ! (
+        umask 077
+        set -C
+        printf 'WG_BIND_IP=%s\nWG_SERVER_URL=%s\n' \
+            "$bind_ip" "$bind_ip" > "$env_file"
+    ); then
+        echo "[BLOCKED] Cannot safely create WireGuard .env."
+        return 2
+    fi
+
+    if ! docker compose \
+        --env-file "$env_file" -f "$WIREGUARD" up -d; then
         echo "[ERROR] WireGuard deployment failed."
         return 1
     fi
 
-    WG_BIND_IP="$bind_ip" WG_SERVER_URL="$bind_ip" \
-        docker compose -f "$WIREGUARD" ps
+    docker compose \
+        --env-file "$env_file" -f "$WIREGUARD" ps
 
     echo "[INFO] Verify the tunnel, firewall and peer handshake."
     echo "[INFO] Never publish private keys or peer configs."
