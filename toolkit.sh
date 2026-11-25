@@ -4,6 +4,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PORTAINER="$ROOT/compose/portainer/compose.yaml"
 PIHOLE="$ROOT/compose/pihole/compose.yaml"
+WIREGUARD="$ROOT/compose/wireguard/compose.yaml"
 
 header() {
     echo
@@ -152,6 +153,28 @@ pihole_deploy() {
     echo "[INFO] Verify Pi-hole health and DNS functionality."
 }
 
+wireguard_plan() {
+    echo
+    echo "=== WireGuard Deployment Plan ==="
+    echo "Project: hbtech-wireguard"
+    echo "UDP: 51821 -> 51820"
+    echo "VPN subnet: 10.77.77.0/24"
+    echo "Peers: 1"
+    echo "Persistent configuration: enabled"
+    echo "QR-code logging: disabled"
+    echo
+
+    WG_BIND_IP=192.0.2.10 WG_SERVER_URL=192.0.2.10 \
+        docker compose -f "$WIREGUARD" config --quiet || {
+        echo "[BLOCKED] Invalid WireGuard configuration."
+        return 2
+    }
+
+    echo "[PASS] WireGuard Compose configuration valid."
+    echo "[INFO] Planning only. No changes made."
+    echo "[INFO] Deployment remains disabled pending network isolation validation."
+}
+
 docker_install_menu() {
     echo
     echo "=== Docker Engine Installation ==="
@@ -223,7 +246,7 @@ menu() {
         echo "2. Install Docker Engine"
         echo "3. Deploy Portainer"
         echo "4. Deploy Pi-hole"
-        echo "5. Deploy WireGuard (coming soon)"
+        echo "5. WireGuard deployment (planning)"
         echo "6. View deployment status"
         echo "7. Exit"
         echo
@@ -234,7 +257,7 @@ menu() {
             2) run_menu_action docker_install_menu ;;
             3) run_menu_action portainer_deploy ;;
             4) run_menu_action pihole_deploy ;;
-            5) echo "[INFO] Not implemented. No changes made." ;;
+            5) run_menu_action wireguard_plan ;;
             6) status ;;
             7) echo "Exiting toolkit."; return 0 ;;
             *) echo "[ERROR] Invalid selection." ;;

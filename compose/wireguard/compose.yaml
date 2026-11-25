@@ -1,0 +1,37 @@
+name: hbtech-wireguard
+
+services:
+  wireguard:
+    image: lscr.io/linuxserver/wireguard:latest
+    restart: unless-stopped
+
+    cap_add:
+      - NET_ADMIN
+
+    environment:
+      PUID: "1000"
+      PGID: "1000"
+      TZ: America/Chicago
+
+      # Server configuration
+      SERVERURL: "${WG_SERVER_URL:?WG_SERVER_URL is required}"
+      SERVERPORT: "51821"
+      PEERS: "1"
+      INTERNAL_SUBNET: "10.77.77.0"
+      PEERDNS: "1.1.1.1"
+      ALLOWEDIPS: "10.77.77.1/32"
+
+      # Never print private peer QR codes into logs
+      LOG_CONFS: "false"
+
+    ports:
+      - "${WG_BIND_IP:?WG_BIND_IP is required}:51821:51820/udp"
+
+    volumes:
+      - wireguard_config:/config
+
+    sysctls:
+      net.ipv4.conf.all.src_valid_mark: "1"
+
+volumes:
+  wireguard_config:

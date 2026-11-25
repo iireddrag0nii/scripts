@@ -36,7 +36,7 @@ check "Interactive exit works" \
     "Exiting toolkit." "$output"
 
 output="$(printf '5\n7\n' | bash "$TOOLKIT")"
-count="$(grep -c 'Not implemented. No changes made.' <<< "$output" || true)"
+count="$(grep -c 'Planning only. No changes made.' <<< "$output" || true)"
 
 if [[ "$count" == "1" ]]; then
     echo "[PASS] Unimplemented services disabled"
