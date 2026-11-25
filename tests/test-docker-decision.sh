@@ -17,9 +17,24 @@ MOCK
 
 cat > "$TMP/bin/systemctl" <<'MOCK'
 #!/bin/bash
-case "${SCENARIO:-}" in
-    fresh|packages_only) exit 1 ;;
-    *) exit 0 ;;
+service="${@: -1}"
+
+case "$service" in
+    docker)
+        case "${SCENARIO:-}" in
+            fresh|packages_only|standalone_containerd) exit 1 ;;
+            *) exit 0 ;;
+        esac
+        ;;
+    podman)
+        [[ "${SCENARIO:-}" == "podman" ]]
+        ;;
+    containerd)
+        [[ "${SCENARIO:-}" == "standalone_containerd" ]]
+        ;;
+    *)
+        exit 1
+        ;;
 esac
 MOCK
 
@@ -28,7 +43,7 @@ cat > "$TMP/bin/dpkg-query" <<'MOCK'
 pkg="${@: -1}"
 
 case "${SCENARIO:-}" in
-    fresh)
+    fresh|unmanaged|standalone_containerd)
         exit 1
         ;;
     packages_only)
@@ -87,7 +102,8 @@ run_test() {
 
     # Exclude Docker entirely for these scenarios.
     if [[ "$scenario" == "fresh" ||
-          "$scenario" == "packages_only" ]]; then
+          "$scenario" == "packages_only" ||
+          "$scenario" == "standalone_containerd" ]]; then
         bin="$TMP/no-docker"
         mkdir -p "$bin"
 
@@ -113,6 +129,9 @@ run_test noaccess MANUAL_REVIEW
 run_test partial MANUAL_REVIEW
 run_test packages_only MANUAL_REVIEW
 run_test mixed MANUAL_REVIEW
+run_test podman MANUAL_REVIEW
+run_test standalone_containerd MANUAL_REVIEW
+run_test unmanaged MANUAL_REVIEW
 
 # Verify that the package inventory identifies the alternative runtime.
 package_output=$(SCENARIO=packages_only PATH="$TMP/no-docker" \
@@ -168,4 +187,80 @@ run_test installed SKIP_INSTALL aarch64
 run_test installed MANUAL_REVIEW armv7l
 
 echo
-echo "All eleven decision scenarios passed."
+echo
+echo "=== Alternative runtime reason verification ==="
+
+verify_reason() {
+    local scenario="$1" expected_reason="$2" bin="$TMP/bin"
+    local output
+
+    if [[ "$scenario" == "standalone_containerd" ]]; then
+        bin="$TMP/no-docker"
+    fi
+
+    output=$(SCENARIO="$scenario" MOCK_ARCH=x86_64 PATH="$bin" \
+        /bin/bash "$ROOT/scripts/docker-decision.sh")
+
+    if grep -Fq "$expected_reason" <<< "$output"; then
+        echo "[PASS] $scenario reason verified"
+    else
+        echo "[FAIL] $scenario reason missing"
+        printf '%s\n' "$output"
+        return 1
+    fi
+}
+
+verify_reason podman "Podman runtime detected"
+verify_reason standalone_containerd "Standalone containerd service detected"
+verify_reason unmanaged "Unmanaged Docker executable detected"
+
+echo
+echo
+echo "=== Snap and nerdctl detection tests ==="
+
+for runtime in snap nerdctl; do
+    bin="$TMP/$runtime-bin"
+    mkdir -p "$bin"
+
+    for name in grep apt-get systemctl dpkg-query docker uname; do
+        ln -s "$TMP/bin/$name" "$bin/$name"
+    done
+
+    if [[ "$runtime" == "snap" ]]; then
+        cat > "$bin/snap" <<'MOCK'
+#!/bin/bash
+[[ "${1:-}" == "list" && "${2:-}" == "docker" ]]
+MOCK
+        expected_reason="Docker Snap installation detected"
+    else
+        cat > "$bin/nerdctl" <<'MOCK'
+#!/bin/bash
+exit 0
+MOCK
+        expected_reason="nerdctl executable detected"
+    fi
+
+    chmod +x "$bin/$runtime"
+
+    output=$(SCENARIO=installed MOCK_ARCH=x86_64 PATH="$bin" \
+        /bin/bash "$ROOT/scripts/docker-decision.sh")
+
+    if grep -Fxq "DECISION: MANUAL_REVIEW" <<< "$output"; then
+        echo "[PASS] $runtime -> MANUAL_REVIEW"
+    else
+        echo "[FAIL] $runtime decision"
+        printf '%s\n' "$output"
+        exit 1
+    fi
+
+    if grep -Fq "$expected_reason" <<< "$output"; then
+        echo "[PASS] $runtime reason verified"
+    else
+        echo "[FAIL] $runtime reason"
+        printf '%s\n' "$output"
+        exit 1
+    fi
+done
+
+echo
+echo "All alternative runtime checks passed."

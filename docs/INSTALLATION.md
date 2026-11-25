@@ -91,6 +91,39 @@ are still planned improvements.
 A successful assessment does not guarantee that a
 deployment will work.
 
+## Docker Installation Decision
+
+The toolkit includes a read-only Docker installation planner.
+
+Run:
+
+    ./scripts/install-docker.sh --plan
+
+For Docker daemon inspection when administrative access is required:
+
+    sudo ./scripts/install-docker.sh --plan
+
+Possible decisions:
+
+- SKIP_INSTALL: An existing Docker installation is operational.
+- MANUAL_REVIEW: The environment is unsupported, incomplete, conflicting, or cannot be verified.
+- FRESH_CANDIDATE: No recognized Docker installation was found on an eligible Ubuntu host.
+
+The decision engine checks installed packages, Docker and Compose availability,
+supported Ubuntu releases, CPU architecture, and selected alternative runtimes.
+
+Alternative runtime detection includes Snap Docker, Podman, nerdctl,
+standalone containerd, and unmanaged Docker executables.
+
+Detection is not exhaustive. Rootless installations, custom service configurations,
+and installations outside the inspected locations may require additional investigation.
+
+FRESH_CANDIDATE is an advisory result, not authorization to install.
+
+The --install option remains disabled.
+
+No software is installed or modified by the planner.
+
 ## Troubleshooting
 
 Inspect host listeners:

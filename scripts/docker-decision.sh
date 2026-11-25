@@ -76,6 +76,51 @@ printf 'Daemon accessible: %s | Service active: %s\n' "$daemon" "$service"
 printf 'Known runtime packages detected: %s\n' "$packages"
 echo
 
+# Detect alternative installations without changing the host.
+alternative_install=0
+alternative_reasons=()
+
+if command -v snap >/dev/null 2>&1; then
+    if snap list docker >/dev/null 2>&1; then
+        alternative_install=1
+        alternative_reasons+=("Docker Snap installation detected")
+    fi
+fi
+
+if command -v podman >/dev/null 2>&1 ||
+   { command -v systemctl >/dev/null 2>&1 &&
+     systemctl is-active --quiet podman; }; then
+    alternative_install=1
+    alternative_reasons+=("Podman runtime detected")
+fi
+
+if command -v nerdctl >/dev/null 2>&1; then
+    alternative_install=1
+    alternative_reasons+=("nerdctl executable detected")
+fi
+
+# Docker binaries without recognized packages need investigation.
+if (( !packages )) &&
+   { command -v docker >/dev/null 2>&1 ||
+     command -v dockerd >/dev/null 2>&1; }; then
+    alternative_install=1
+    alternative_reasons+=("Unmanaged Docker executable detected")
+fi
+
+# An active containerd service is expected with Docker CE.
+# Only flag it here when no recognized packages or Docker CLI exist.
+if (( !packages && !docker_cli )) &&
+   command -v systemctl >/dev/null 2>&1 &&
+   systemctl is-active --quiet containerd; then
+    alternative_install=1
+    alternative_reasons+=("Standalone containerd service detected")
+fi
+
+if (( alternative_install )); then
+    echo "Alternative runtime indicators:"
+    printf '  - %s\n' "${alternative_reasons[@]}"
+fi
+
 if [[ "$os_id" != "ubuntu" ]]; then
     echo "DECISION: MANUAL_REVIEW"
     echo "Reason: This workflow currently targets Ubuntu."
@@ -85,6 +130,9 @@ elif [[ ! " 22.04 24.04 26.04 26.10 " =~ " $os_version " ]]; then
 elif [[ "$arch" != "x86_64" && "$arch" != "aarch64" ]]; then
     echo "DECISION: MANUAL_REVIEW"
     echo "Reason: CPU architecture has not been validated."
+elif (( alternative_install )); then
+    echo "DECISION: MANUAL_REVIEW"
+    echo "Reason: Alternative container runtime or installation detected."
 elif (( ${#review_packages[@]} > 0 )); then
     echo "DECISION: MANUAL_REVIEW"
     echo "Reason: Existing runtime packages require installation-path review."

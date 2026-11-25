@@ -17,6 +17,18 @@ Deployment Toolkit will be documented here.
 - Basic Docker published-port inventory
 - Project documentation and security guidance
 
+### Docker Installation Safety
+
+- Added a read-only Docker readiness assessment
+- Added Docker installation decision engine
+- Added a non-destructive installation planner
+- Added Ubuntu release and CPU architecture checks
+- Added installed runtime package inventory
+- Added alternative runtime detection for Snap Docker, Podman, nerdctl, and standalone containerd
+- Added detection for Docker executables without recognized packages
+- Added automated decision and installer safety tests
+- Verified existing Docker CE installation is not selected for installation
+
 ### Fixed
 
 - Corrected local listening port detection in ss output
