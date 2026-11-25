@@ -29,6 +29,8 @@ services:
 
     volumes:
       - wireguard_config:/config
+      - ./server.conf:/config/templates/server.conf:ro
+      - ./peer.conf:/config/templates/peer.conf:ro
 
     sysctls:
       net.ipv4.conf.all.src_valid_mark: "1"
