@@ -2,7 +2,7 @@
 
 A modular deployment toolkit for Linux homelabs, infrastructure labs, and self-hosted environments.
 
-**Version:** 2.0 (in development)  
+**Version:** 2.0 (in development)
 **Status:** Pre-release — service deployment automation is not yet available.
 
 ## Overview
