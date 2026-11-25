@@ -18,7 +18,7 @@ portainer_plan() {
     echo
     echo "=== Portainer Deployment Plan ==="
     echo "Compose project: hbtech-portainer"
-    echo "Image: portainer/portainer-ce:lts"
+    echo "Image: Portainer CE LTS (pinned SHA256 digest)"
     echo "HTTPS: 127.0.0.1:9443"
     echo "Storage: persistent named volume"
     echo "Docker socket: privileged host access"
@@ -69,8 +69,31 @@ portainer_deploy() {
         return 0
     fi
 
-    docker compose -f "$PORTAINER" up -d
-    docker compose -f "$PORTAINER" ps
+    if ! docker compose -f "$PORTAINER" up -d; then
+        echo "[ERROR] Portainer deployment failed."
+        return 1
+    fi
+
+    if ! docker compose -f "$PORTAINER" ps; then
+        echo "[ERROR] Cannot verify Portainer container status."
+        return 1
+    fi
+
+    echo
+    echo "[PASS] Portainer deployment command completed."
+    echo
+    echo "=== Initial Administrator Setup ==="
+    echo
+    echo "Portainer HTTPS: https://localhost:9443"
+    echo
+    echo "For access from another computer, establish an SSH tunnel:"
+    echo "  ssh -L 9443:127.0.0.1:9443 USER@SERVER_IP"
+    echo
+    echo "If Portainer requests a setup token, retrieve it on the host:"
+    echo "  sudo docker logs hbtech-portainer-portainer-1 2>&1 | grep 'setup_token='"
+    echo
+    echo "[SECURITY] Keep setup tokens and administrator credentials private."
+    echo "[INFO] See docs/PORTAINER.md for setup and recovery instructions."
 }
 
 status() {

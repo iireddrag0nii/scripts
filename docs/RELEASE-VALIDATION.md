@@ -55,6 +55,7 @@ unrelated workloads or irreplaceable data.
 - [ ] Verify container is running
 - [ ] Verify HTTPS on localhost port 9443
 - [ ] Verify administrator setup
+- [ ] Verify setup-token retrieval when required
 - [ ] Recreate container without removing volumes
 - [ ] Verify configuration persists
 - [ ] Repeat menu option 3
@@ -161,3 +162,28 @@ Run the tests from the repository root:
 
 Do not mark the release approved until all required
 checks pass or exceptions are explicitly documented.
+
+## Compatibility Test — Ubuntu 26.04.1 LTS
+
+Date: 2026-11-25
+Environment: Proxmox travel-kit VM, x86_64
+Host address: 192.168.8.199
+Repository commit: 2075502
+
+Results:
+
+- PASS: Git repository cloned successfully
+- PASS: Host readiness assessment completed
+- PASS: No pre-existing Docker installation detected
+- PASS: Docker decision reported FRESH_CANDIDATE
+- PASS: Installation authorization correctly blocked
+- PASS: No software installed by toolkit assessment
+
+Findings:
+
+- Ubuntu 26.04 is not currently enabled for automated installation.
+- Preflight still contains legacy wg-easy port descriptions.
+- Fresh-host end-to-end deployment remains untested.
+
+Decision: PASS for unsupported-release safety behavior.
+Ubuntu 26.04 deployment support remains unvalidated.

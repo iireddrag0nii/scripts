@@ -2,21 +2,20 @@
 
 ## Status
 
-Initial Docker Compose implementation.
-
-Configuration validation must pass before deployment.
-Runtime validation is performed on a disposable lab VM.
+Interactive deployment and persistence have been
+validated on Ubuntu Server 22.04 and 26.04 AMD64 lab VMs.
+Full toolkit release validation remains pending.
 
 ## Components
 
 - Portainer Community Edition
 - Docker Compose project: hbtech-portainer
-- Image channel: portainer/portainer-ce:lts
+- Image: Portainer CE LTS, pinned by immutable SHA256 digest
 - HTTPS management: 127.0.0.1:9443
 - Persistent volume: portainer_data
 
-The image must be pinned to a tested version or digest
-before a production-ready release.
+The Compose image is pinned to a tested registry digest.
+Review and validate updates before changing the digest.
 
 ## Security
 
@@ -57,6 +56,34 @@ browser certificate warning.
 
 Complete initial administrator setup promptly.
 
+## Initial Setup Token
+
+Some Portainer versions require a one-time setup token
+before creating the initial administrator account.
+
+Retrieve the token on the Docker host:
+
+    sudo docker logs hbtech-portainer-portainer-1 2>&1 | grep 'setup_token='
+
+Copy the token value into the Portainer setup page.
+
+Treat the setup token as a temporary authentication
+secret. Do not share it in screenshots, public issues,
+terminal recordings, or support logs.
+
+If initialization expires, restart the container:
+
+    sudo docker restart hbtech-portainer-portainer-1
+
+Then retrieve the newest token:
+
+    sudo docker logs --since 1m hbtech-portainer-portainer-1 2>&1 | grep 'setup_token='
+
+Refresh https://localhost:9443 through the SSH tunnel.
+
+Do not remove the persistent Portainer volume to
+recover an expired initialization window.
+
 ## Verify
 
     sudo docker compose \
@@ -80,8 +107,8 @@ deletion is explicitly intended.
 
 ## Limitations
 
-Runtime deployment and persistence across recreation
-must be validated before release.
+Additional platforms and interrupted-deployment recovery
+scenarios remain to be validated.
 
 Only deploy on systems you are authorized to administer.
 
