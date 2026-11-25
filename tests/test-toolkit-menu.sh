@@ -35,15 +35,12 @@ output="$(printf '7\n' | bash "$TOOLKIT")"
 check "Interactive exit works" \
     "Exiting toolkit." "$output"
 
-output="$(printf '5\n7\n' | bash "$TOOLKIT")"
-count="$(grep -c 'Planning only. No changes made.' <<< "$output" || true)"
-
-if [[ "$count" == "1" ]]; then
-    echo "[PASS] Unimplemented services disabled"
-    ((pass+=1))
+if (( EUID != 0 )); then
+    output="$(printf '5\n7\n' | bash "$TOOLKIT")"
+    check "Non-root WireGuard deployment blocked" \
+        "[BLOCKED] Use sudo to deploy WireGuard." "$output"
 else
-    echo "[FAIL] Unimplemented services disabled"
-    ((fail+=1))
+    echo "[INFO] WireGuard non-root check requires an unprivileged user"
 fi
 
 if (( EUID != 0 )); then

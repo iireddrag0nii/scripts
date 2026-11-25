@@ -175,6 +175,94 @@ wireguard_plan() {
     echo "[INFO] Deployment remains disabled pending network isolation validation."
 }
 
+wireguard_deploy() {
+    echo
+    echo "=== WireGuard Deployment ==="
+    echo "Project: hbtech-wireguard"
+    echo "Protocol: UDP 51821 -> 51820"
+    echo "VPN subnet: 10.77.77.0/24"
+    echo "Client routes: 10.77.77.1/32"
+    echo "LAN routing: disabled"
+    echo "Configuration: persistent Docker volume"
+    echo "Router configuration: unchanged"
+    echo
+
+    if (( EUID != 0 )); then
+        echo "[BLOCKED] Use sudo to deploy WireGuard."
+        return 2
+    fi
+
+    if ! docker info >/dev/null 2>&1; then
+        echo "[BLOCKED] Docker daemon unavailable."
+        return 2
+    fi
+
+    local existing
+    existing="$(
+        WG_BIND_IP=192.0.2.10 WG_SERVER_URL=192.0.2.10 \
+            docker compose -f "$WIREGUARD" ps -a -q
+    )" || {
+        echo "[BLOCKED] Cannot inspect existing WireGuard project."
+        return 2
+    }
+
+    if [[ -n "$existing" ]]; then
+        echo "[SKIP] Toolkit WireGuard project already exists."
+        echo "Existing containers and VPN keys were not changed."
+        echo "Review deployment status before making changes."
+        return 0
+    fi
+
+    local bind_ip
+    read -r -p "Enter the server LAN IPv4 address: " bind_ip || {
+        echo "[CANCELLED] No deployment performed."
+        return 2
+    }
+
+    if ! python3 "$ROOT/scripts/check-wireguard-conflicts.py" \
+        --bind-ip "$bind_ip"; then
+        echo "[BLOCKED] WireGuard prerequisite checks failed."
+        return 2
+    fi
+
+    if ! WG_BIND_IP="$bind_ip" WG_SERVER_URL="$bind_ip" \
+        docker compose -f "$WIREGUARD" config --quiet; then
+        echo "[BLOCKED] Invalid WireGuard Compose configuration."
+        return 2
+    fi
+
+    echo
+    echo "WireGuard endpoint: $bind_ip:51821/UDP"
+    echo "This will create a Docker network, container,"
+    echo "persistent volume, and VPN server/client keys."
+    echo "The endpoint will be reachable on the selected LAN IP."
+    echo "No router forwarding or host DNS changes are made."
+    echo
+
+    local answer
+    read -r -p "Type DEPLOY WIREGUARD to continue: " answer || {
+        echo "[CANCELLED] No deployment performed."
+        return 2
+    }
+
+    if [[ "$answer" != "DEPLOY WIREGUARD" ]]; then
+        echo "[CANCELLED] No deployment performed."
+        return 0
+    fi
+
+    if ! WG_BIND_IP="$bind_ip" WG_SERVER_URL="$bind_ip" \
+        docker compose -f "$WIREGUARD" up -d; then
+        echo "[ERROR] WireGuard deployment failed."
+        return 1
+    fi
+
+    WG_BIND_IP="$bind_ip" WG_SERVER_URL="$bind_ip" \
+        docker compose -f "$WIREGUARD" ps
+
+    echo "[INFO] Verify the tunnel, firewall and peer handshake."
+    echo "[INFO] Never publish private keys or peer configs."
+}
+
 docker_install_menu() {
     echo
     echo "=== Docker Engine Installation ==="
@@ -246,7 +334,7 @@ menu() {
         echo "2. Install Docker Engine"
         echo "3. Deploy Portainer"
         echo "4. Deploy Pi-hole"
-        echo "5. WireGuard deployment (planning)"
+        echo "5. Deploy WireGuard"
         echo "6. View deployment status"
         echo "7. Exit"
         echo
@@ -257,7 +345,7 @@ menu() {
             2) run_menu_action docker_install_menu ;;
             3) run_menu_action portainer_deploy ;;
             4) run_menu_action pihole_deploy ;;
-            5) run_menu_action wireguard_plan ;;
+            5) run_menu_action wireguard_deploy ;;
             6) status ;;
             7) echo "Exiting toolkit."; return 0 ;;
             *) echo "[ERROR] Invalid selection." ;;
