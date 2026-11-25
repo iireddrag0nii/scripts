@@ -82,6 +82,18 @@ status() {
     docker compose -f "$PORTAINER" ps
 }
 
+run_menu_action() {
+    local result=0
+
+    "$@" || result=$?
+
+    if (( result != 0 )); then
+        echo "[ERROR] Action failed with exit code $result."
+    fi
+
+    return 0
+}
+
 menu() {
     while true; do
         header
@@ -96,9 +108,9 @@ menu() {
         read -r -p "Select an option [1-7]: " choice || return 0
 
         case "$choice" in
-            1) bash "$ROOT/scripts/preflight.sh" || true ;;
-            2) bash "$ROOT/scripts/install-docker.sh" --plan || true ;;
-            3) portainer_deploy || true ;;
+            1) run_menu_action bash "$ROOT/scripts/preflight.sh" ;;
+            2) run_menu_action bash "$ROOT/scripts/install-docker.sh" --plan ;;
+            3) run_menu_action portainer_deploy ;;
             4|5) echo "[INFO] Not implemented. No changes made." ;;
             6) status ;;
             7) echo "Exiting toolkit."; return 0 ;;
@@ -110,9 +122,10 @@ menu() {
 case "${1:-}" in
     "") menu ;;
     --help)
-        echo "Usage: $0 [--help|--status|--plan-portainer]"
+        echo "Usage: $0 [--help|--status|--plan-portainer|--deploy-portainer]"
         ;;
     --status) status ;;
+    --deploy-portainer) portainer_deploy ;;
     --plan-portainer) header; portainer_plan ;;
     *) echo "[ERROR] Unknown option."; exit 2 ;;
 esac
