@@ -124,6 +124,28 @@ The --install option remains disabled.
 
 No software is installed or modified by the planner.
 
+## Docker Endpoint Detection
+
+The decision engine also checks for:
+
+- Nonstandard DOCKER_HOST configurations
+- Active Docker services for the current user
+- Docker sockets under /run/user/<UID>/docker.sock
+
+These conditions trigger MANUAL_REVIEW.
+
+The standard system Docker socket does not independently
+trigger a conflict warning.
+
+Detection covers the executing account, not every account
+on the machine.
+
+Current-user socket detection has not yet received a
+dedicated automated socket-fixture test.
+
+Rootless and custom installations may require additional
+manual inspection.
+
 ## Troubleshooting
 
 Inspect host listeners:

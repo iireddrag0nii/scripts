@@ -29,6 +29,15 @@ Deployment Toolkit will be documented here.
 - Added automated decision and installer safety tests
 - Verified existing Docker CE installation is not selected for installation
 
+### Docker Endpoint Safety
+
+- Added detection for nonstandard DOCKER_HOST endpoints
+- Added current-user Docker service detection
+- Added current-user Docker socket detection
+- Added automated tests for custom endpoints and user-level services
+- Verified standard Docker CE remains classified as SKIP_INSTALL
+- Kept all installation operations disabled
+
 ### Fixed
 
 - Corrected local listening port detection in ss output

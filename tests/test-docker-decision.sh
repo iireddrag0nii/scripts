@@ -17,6 +17,14 @@ MOCK
 
 cat > "$TMP/bin/systemctl" <<'MOCK'
 #!/bin/bash
+# User-level Docker service is separate from system Docker.
+if [[ "${1:-}" == "--user" ]]; then
+    if [[ "${SCENARIO:-}" == "rootless" ]]; then
+        exit 0
+    fi
+    exit 1
+fi
+
 service="${@: -1}"
 
 case "$service" in
@@ -264,3 +272,40 @@ done
 
 echo
 echo "All alternative runtime checks passed."
+
+echo
+echo "=== Docker endpoint detection tests ==="
+
+verify_endpoint() {
+    local label="$1" expected_reason="$2"
+    local output
+
+    if [[ "$label" == "custom_endpoint" ]]; then
+        output=$(SCENARIO=installed MOCK_ARCH=x86_64 \
+            DOCKER_HOST="unix:///tmp/custom-docker.sock" \
+            PATH="$TMP/bin" \
+            /bin/bash "$ROOT/scripts/docker-decision.sh")
+    else
+        output=$(SCENARIO=rootless MOCK_ARCH=x86_64 \
+            DOCKER_HOST="" PATH="$TMP/bin" \
+            /bin/bash "$ROOT/scripts/docker-decision.sh")
+    fi
+
+    if grep -Fxq "DECISION: MANUAL_REVIEW" <<< "$output" &&
+       grep -Fq "$expected_reason" <<< "$output"; then
+        echo "[PASS] $label -> MANUAL_REVIEW (reason verified)"
+    else
+        echo "[FAIL] $label"
+        printf '%s\n' "$output"
+        return 1
+    fi
+}
+
+verify_endpoint custom_endpoint \
+    "Nonstandard DOCKER_HOST endpoint configured"
+
+verify_endpoint rootless \
+    "User-level Docker service active"
+
+echo
+echo "All Docker endpoint tests passed."

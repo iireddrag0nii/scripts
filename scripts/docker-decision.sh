@@ -121,6 +121,42 @@ if (( alternative_install )); then
     printf '  - %s\n' "${alternative_reasons[@]}"
 fi
 
+# Detect nonstandard Docker endpoints and current-user
+# rootless Docker installations.
+rootless_review=0
+rootless_reasons=()
+
+if [[ -n "${DOCKER_HOST:-}" &&
+      "${DOCKER_HOST}" != "unix:///var/run/docker.sock" &&
+      "${DOCKER_HOST}" != "unix:///run/docker.sock" ]]; then
+    rootless_review=1
+    rootless_reasons+=("Nonstandard DOCKER_HOST endpoint configured")
+fi
+
+if command -v systemctl >/dev/null 2>&1 &&
+   systemctl --user is-active --quiet docker 2>/dev/null; then
+    rootless_review=1
+    rootless_reasons+=("User-level Docker service active")
+fi
+
+if command -v id >/dev/null 2>&1; then
+    current_uid="$(id -u)"
+
+    if [[ "$current_uid" =~ ^[0-9]+$ ]]; then
+        user_socket="/run/user/${current_uid}/docker.sock"
+
+        if [[ -S "$user_socket" ]]; then
+            rootless_review=1
+            rootless_reasons+=("User-level Docker socket detected")
+        fi
+    fi
+fi
+
+if (( rootless_review )); then
+    echo "Docker endpoint review indicators:"
+    printf '  - %s\n' "${rootless_reasons[@]}"
+fi
+
 if [[ "$os_id" != "ubuntu" ]]; then
     echo "DECISION: MANUAL_REVIEW"
     echo "Reason: This workflow currently targets Ubuntu."
@@ -130,6 +166,9 @@ elif [[ ! " 22.04 24.04 26.04 26.10 " =~ " $os_version " ]]; then
 elif [[ "$arch" != "x86_64" && "$arch" != "aarch64" ]]; then
     echo "DECISION: MANUAL_REVIEW"
     echo "Reason: CPU architecture has not been validated."
+elif (( rootless_review )); then
+    echo "DECISION: MANUAL_REVIEW"
+    echo "Reason: Docker endpoint or user-level installation requires review."
 elif (( alternative_install )); then
     echo "DECISION: MANUAL_REVIEW"
     echo "Reason: Alternative container runtime or installation detected."
