@@ -3,6 +3,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PORTAINER="$ROOT/compose/portainer/compose.yaml"
+PIHOLE="$ROOT/compose/pihole/compose.yaml"
 
 header() {
     echo
@@ -82,6 +83,75 @@ status() {
     docker compose -f "$PORTAINER" ps
 }
 
+pihole_deploy() {
+    echo
+    echo "=== Pi-hole Deployment Plan ==="
+    echo "Project: hbtech-pihole"
+    echo "DNS: 127.0.0.1:5353 TCP/UDP"
+    echo "Web: 127.0.0.1:8088"
+    echo "Persistent configuration: enabled"
+    echo "DHCP: disabled"
+    echo "Host DNS configuration: unchanged"
+    echo
+
+    if ! docker compose -f "$PIHOLE" config --quiet; then
+        echo "[BLOCKED] Invalid Pi-hole Compose configuration."
+        return 2
+    fi
+
+    echo "[PASS] Compose configuration valid."
+
+    if (( EUID != 0 )); then
+        echo "[BLOCKED] Use sudo to deploy Pi-hole."
+        return 2
+    fi
+
+    if ! docker info >/dev/null 2>&1; then
+        echo "[BLOCKED] Docker daemon unavailable."
+        return 2
+    fi
+
+    local existing
+    existing="$(docker compose -f "$PIHOLE" ps -a -q)" || {
+        echo "[BLOCKED] Cannot inspect existing Pi-hole project."
+        return 2
+    }
+
+    if [[ -n "$existing" ]]; then
+        echo "[SKIP] Toolkit Pi-hole project already exists."
+        echo "Review its status before making changes."
+        return 0
+    fi
+
+    if ! bash "$ROOT/scripts/check-pihole-conflicts.sh"; then
+        echo "[BLOCKED] Pi-hole port safety checks failed."
+        return 2
+    fi
+
+    echo
+    echo "This will deploy Pi-hole and create persistent storage."
+    echo "No host DNS settings or router settings will be changed."
+
+    local answer
+    read -r -p "Type DEPLOY PIHOLE to continue: " answer || {
+        echo "[CANCELLED] No deployment performed."
+        return 2
+    }
+
+    if [[ "$answer" != "DEPLOY PIHOLE" ]]; then
+        echo "[CANCELLED] No deployment performed."
+        return 0
+    fi
+
+    if ! docker compose -f "$PIHOLE" up -d; then
+        echo "[ERROR] Pi-hole deployment failed."
+        return 1
+    fi
+
+    docker compose -f "$PIHOLE" ps
+    echo "[INFO] Verify Pi-hole health and DNS functionality."
+}
+
 docker_install_menu() {
     echo
     echo "=== Docker Engine Installation ==="
@@ -152,7 +222,7 @@ menu() {
         echo "1. Check host readiness"
         echo "2. Install Docker Engine"
         echo "3. Deploy Portainer"
-        echo "4. Deploy Pi-hole (coming soon)"
+        echo "4. Deploy Pi-hole"
         echo "5. Deploy WireGuard (coming soon)"
         echo "6. View deployment status"
         echo "7. Exit"
@@ -163,7 +233,8 @@ menu() {
             1) run_menu_action bash "$ROOT/scripts/preflight.sh" ;;
             2) run_menu_action docker_install_menu ;;
             3) run_menu_action portainer_deploy ;;
-            4|5) echo "[INFO] Not implemented. No changes made." ;;
+            4) run_menu_action pihole_deploy ;;
+            5) echo "[INFO] Not implemented. No changes made." ;;
             6) status ;;
             7) echo "Exiting toolkit."; return 0 ;;
             *) echo "[ERROR] Invalid selection." ;;

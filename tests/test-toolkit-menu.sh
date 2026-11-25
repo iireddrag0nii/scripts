@@ -35,10 +35,10 @@ output="$(printf '7\n' | bash "$TOOLKIT")"
 check "Interactive exit works" \
     "Exiting toolkit." "$output"
 
-output="$(printf '4\n5\n7\n' | bash "$TOOLKIT")"
+output="$(printf '5\n7\n' | bash "$TOOLKIT")"
 count="$(grep -c 'Not implemented. No changes made.' <<< "$output" || true)"
 
-if [[ "$count" == "2" ]]; then
+if [[ "$count" == "1" ]]; then
     echo "[PASS] Unimplemented services disabled"
     ((pass+=1))
 else
@@ -63,6 +63,14 @@ if (( EUID != 0 )) && command -v docker >/dev/null 2>&1; then
         check "Docker assessment failure is visible" \
             "[BLOCKED] Docker assessment returned exit code 2." "$output"
     fi
+fi
+
+
+# Pi-hole must refuse deployment when the user is not root.
+if (( EUID != 0 )); then
+    output="$(printf '%s\n' 4 7 | bash "$TOOLKIT")"
+    check "Non-root Pi-hole deployment blocked" \
+        "[BLOCKED] Use sudo to deploy Pi-hole." "$output"
 fi
 
 echo

@@ -1,0 +1,25 @@
+name: hbtech-pihole
+
+services:
+  pihole:
+    image: pihole/pihole:latest
+    restart: unless-stopped
+
+    ports:
+      # Lab DNS access: localhost only
+      - "127.0.0.1:5353:53/tcp"
+      - "127.0.0.1:5353:53/udp"
+
+      # Lab web management: localhost only
+      - "127.0.0.1:8088:80/tcp"
+
+    environment:
+      TZ: America/Chicago
+      FTLCONF_dns_listeningMode: ALL
+      FTLCONF_dns_upstreams: "1.1.1.1;9.9.9.9"
+
+    volumes:
+      - pihole_data:/etc/pihole
+
+volumes:
+  pihole_data:
