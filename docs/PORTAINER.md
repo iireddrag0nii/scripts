@@ -113,3 +113,40 @@ runtime validation on the Ubuntu 22.04 AMD64 lab VM.
 
 Additional operating systems, architectures, image versions,
 and recovery scenarios remain untested.
+
+## Interactive Toolkit Deployment Validation
+
+Date: November 25, 2026
+Platform: Ubuntu Server 22.04 AMD64
+Toolkit revision: 627a01e
+
+The existing Portainer Compose container was removed using
+docker compose down. The persistent named volume was retained.
+
+Portainer was redeployed using:
+
+    sudo ./toolkit.sh
+
+Menu selection:
+
+    3. Deploy Portainer
+
+Observed results:
+
+- Compose configuration validation passed
+- TCP 9443 conflict detection passed
+- Explicit deployment confirmation was required
+- Portainer container started successfully
+- Existing named volume was preserved
+- HTTPS remained bound to 127.0.0.1:9443
+- HTTPS endpoint returned HTTP 200
+
+New container creation time:
+
+    2026-11-25T06:10:02Z
+
+This validates the interactive deployment workflow using
+an existing persistent data volume.
+
+A completely fresh Portainer data-volume initialization
+through the interactive menu remains untested.
