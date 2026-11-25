@@ -2,7 +2,7 @@
 
 HBTECHSOLUTIONS Infrastructure Deployment Toolkit
 
-Status: PENDING CLEAN-HOST VALIDATION
+Status: CLEAN-HOST FUNCTIONAL VALIDATION PASSED; FINAL RELEASE REVIEW PENDING
 
 ## Test Environment
 
@@ -165,6 +165,25 @@ Run the tests from the repository root:
 Do not mark the release approved until all required
 checks pass or exceptions are explicitly documented.
 
+## Validation Record Interpretation
+
+The checklist above is the reusable acceptance template.
+The results below document testing completed on
+November 25, 2026.
+
+The initial compatibility test describes the toolkit
+before Ubuntu 26.04 installation was enabled.
+
+Subsequent commits added Ubuntu 26.04 eligibility,
+corrected preflight port descriptions, and successfully
+completed clean-host deployment.
+
+Historical findings are retained for traceability.
+They do not describe the current implementation.
+
+Interrupted-installation recovery is documented but has
+not received a dedicated live fault-injection test.
+
 ## Compatibility Test — Ubuntu 26.04.1 LTS
 
 Date: 2026-11-25
@@ -198,6 +217,8 @@ Environment: Proxmox travel-kit VM
 Host: v2testing
 Baseline commit: 466492c
 Updated during testing through: 64cc580
+Final release-hardening revision: d2cd731
+Final automated regression suite: PASS
 
 ### Docker Engine — PASS
 
