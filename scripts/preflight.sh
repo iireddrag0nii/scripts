@@ -20,26 +20,63 @@ report() {
 
 check_port() {
     local port="$1" proto="$2" service="$3"
-    local result
+    local result="" docker_ports="" owner=""
+    local occupied=0 docker_verified=0
+    local container mappings mapping_re
 
     if ! command -v ss >/dev/null 2>&1; then
-        report WARN "Cannot inspect $port/$proto: ss unavailable"
+        report WARN "$service: cannot inspect $port/$proto (ss unavailable)"
         return
     fi
 
     if [[ "$proto" == "tcp" ]]; then
-        result=$(ss -H -ltn 2>/dev/null)
+        if ! result=$(ss -H -ltn 2>/dev/null); then
+            report WARN "$service: TCP listener inspection failed"
+            return
+        fi
     else
-        result=$(ss -H -lun 2>/dev/null)
+        if ! result=$(ss -H -lun 2>/dev/null); then
+            report WARN "$service: UDP listener inspection failed"
+            return
+        fi
     fi
 
     if awk -v port="$port" '
         $4 ~ (":" port "$") { found=1 }
         END { exit !found }
     ' <<< "$result"; then
-        report WARN "$service: $port/$proto is already bound"
+        occupied=1
+    fi
+
+    if command -v docker >/dev/null 2>&1; then
+        if docker_ports=$(docker ps --format \
+            '{{.Names}}|{{.Ports}}' 2>/dev/null); then
+            docker_verified=1
+
+            mapping_re="(^|[[:space:],])[^,[:space:]]*:${port}->[^,[:space:]]+/${proto}([[:space:],]|$)"
+
+            while IFS='|' read -r container mappings; do
+                if [[ "$mappings" =~ $mapping_re ]]; then
+                    owner="${owner:+$owner, }$container"
+                    occupied=1
+                fi
+            done <<< "$docker_ports"
+        fi
+    fi
+
+    if (( occupied )); then
+        report WARN "$service: $port/$proto is occupied"
+        if [[ -n "$owner" ]]; then
+            printf '       Docker owner: %s\n' "$owner"
+        elif (( ! docker_verified )); then
+            echo "       Docker ownership could not be verified"
+        else
+            echo "       Host listener detected; inspect with ss"
+        fi
+    elif (( ! docker_verified )); then
+        report WARN "$service: $port/$proto has no detected host listener; Docker unverified"
     else
-        report PASS "$service: $port/$proto has no detected listener"
+        report PASS "$service: $port/$proto has no detected host listener or Docker mapping"
     fi
 }
 
