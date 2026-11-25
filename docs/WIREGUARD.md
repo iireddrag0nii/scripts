@@ -93,6 +93,66 @@ inspect Docker and the existing .env file before retrying.
 Do not delete the persistent WireGuard volume to resolve
 an endpoint configuration problem.
 
+### Recovering an interrupted initial deployment
+
+An interrupted deployment may leave the local .env file
+even when Docker Compose has not started a container.
+
+Do not delete .env, remove Docker volumes, or rerun the
+interactive installer without investigating first.
+
+From the repository root, inspect the local file without
+printing its contents:
+
+    sudo stat -c '%a %U:%G %n' compose/wireguard/.env
+
+Expected permissions: 600.
+
+Check that Docker is available:
+
+    sudo docker info >/dev/null
+
+Validate the saved Compose configuration:
+
+    sudo docker compose --env-file compose/wireguard/.env -f compose/wireguard/compose.yaml config --quiet
+
+Inspect the project, including stopped containers:
+
+    sudo docker compose --env-file compose/wireguard/.env -f compose/wireguard/compose.yaml ps -a
+
+Inspect available diagnostic logs:
+
+    sudo docker compose --env-file compose/wireguard/.env -f compose/wireguard/compose.yaml logs --tail=40
+
+Inspect persistent volumes:
+
+    sudo docker volume ls --filter name=hbtech-wireguard
+
+If a container already exists, investigate its state and
+startup errors. The interactive installer intentionally
+skips existing projects, including stopped containers.
+
+If no container exists, verify that the saved endpoint
+matches the approved host address, that UDP 51821 is
+available, and that 10.77.77.0/24 does not overlap
+another network.
+
+After resolving the original failure, an administrator
+may resume the reviewed configuration directly:
+
+    sudo docker compose --env-file compose/wireguard/.env -f compose/wireguard/compose.yaml up -d
+
+Then verify the container, wg0 interface, and firewall
+rules before importing or reconnecting a VPN client.
+
+A successful Docker Compose command alone does not prove
+that the VPN is ready or securely configured.
+
+If the saved endpoint is incorrect, stop and review the
+existing containers, volumes, and peer configuration
+before changing it. Do not regenerate VPN keys or delete
+persistent storage as a routine recovery action.
+
 ### Existing installations
 
 Installations created before endpoint persistence was

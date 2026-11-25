@@ -118,10 +118,12 @@ QR codes, or sensitive VPN diagnostics.
 
 Run the tests from the repository root:
 
+    python3 tests/test-preflight-ports.py
     ./tests/test-toolkit-menu.sh
     ./tests/test-docker-decision.sh
     ./tests/test-install-docker.sh
     ./tests/test-portainer-compose.sh
+    ./tests/test-portainer-postinstall.sh
     python3 tests/test-portainer-conflicts.py
     python3 tests/test-pihole-compose.py
     python3 tests/test-pihole-conflicts.py
@@ -187,3 +189,68 @@ Findings:
 
 Decision: PASS for unsupported-release safety behavior.
 Ubuntu 26.04 deployment support remains unvalidated.
+
+## Clean-Host Acceptance Results — Ubuntu 26.04
+
+Date: November 25, 2026
+Platform: Ubuntu Server 26.04.1 LTS, AMD64
+Environment: Proxmox travel-kit VM
+Host: v2testing
+Baseline commit: 466492c
+Updated during testing through: 64cc580
+
+### Docker Engine — PASS
+
+- Installed using the interactive toolkit
+- Docker Engine 29.10.1
+- Docker Compose 5.8.0
+- Buildx 0.39.1
+- hello-world completed successfully
+- Elevated repeat-run assessment returned SKIP_INSTALL
+
+### Portainer — PASS
+
+- Deployed using the interactive toolkit
+- HTTPS returned HTTP 200
+- Management bound to localhost:9443
+- Initial administrator setup completed
+- Persistent settings survived container recreation
+- Repeat-run installation returned SKIP
+- Setup-token guidance added during acceptance testing
+
+### Pi-hole — PASS
+
+- Deployed using the interactive toolkit
+- Container reported healthy
+- UDP and TCP DNS resolution succeeded
+- Test domain was blocked with response 0.0.0.0
+- Denylist persisted after container recreation
+- Repeat-run installation returned SKIP
+- Temporary test-domain entry removed
+
+### WireGuard — PASS
+
+- Deployed using the interactive toolkit
+- Endpoint: 192.168.8.199:51821/UDP
+- Tunnel: 10.77.77.0/24
+- Windows client completed authenticated handshake
+- Tunnel ping succeeded with zero packet loss
+- Forwarding isolation confirmed using DROP counters
+- Server public key persisted across recreation
+- INPUT and FORWARD restrictions remained present
+- Repeat-run installation returned SKIP
+- Temporary server-side peer export removed
+
+### Observations
+
+- Ubuntu 26.04 installation required extending the
+  guarded Docker installation allowlist.
+- Non-root Docker assessment returned MANUAL_REVIEW
+  because daemon access required elevated permissions.
+- WireGuard interface initialization was briefly delayed
+  immediately after container recreation.
+- Preflight output retains legacy wg-easy port descriptions.
+- Full regression review and release approval remain pending.
+
+Functional deployment result: PASS
+Final release decision: PENDING

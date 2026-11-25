@@ -144,13 +144,13 @@ fi
 echo
 echo "=== Port availability ==="
 
-check_port 9443 tcp "Portainer HTTPS"
-check_port 51820 udp "WireGuard tunnel"
-check_port 51821 tcp "wg-easy management"
-check_port 53 tcp "Pi-hole DNS"
-check_port 53 udp "Pi-hole DNS"
-check_port 80 tcp "Web interface"
-check_port 443 tcp "HTTPS"
+# Toolkit v2 default published host ports.
+# WireGuard binds to a selected LAN address, not localhost.
+check_port 9443 tcp "Portainer HTTPS (localhost)"
+check_port 5353 tcp "Pi-hole DNS TCP (localhost)"
+check_port 5353 udp "Pi-hole DNS UDP (localhost)"
+check_port 8088 tcp "Pi-hole web (localhost)"
+check_port 51821 udp "WireGuard VPN (selected LAN IP)"
 
 echo
 echo "=== Docker Published Ports ==="
