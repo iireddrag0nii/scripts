@@ -1,22 +1,113 @@
-These two scripts allow for you to install docker, portainer, wireguard (https://github.com/wg-easy/wg-easy), and pi hole without needing to go get all the individual files and guides. 
+# HBTECHSOLUTIONS Infrastructure Deployment Toolkit
 
-These scripts require very little adjustments to get them going.
+A modular deployment toolkit for Linux homelabs, infrastructure labs, and self-hosted environments.
 
-1. Go into the location where the two files are located and make them executable. The chmod +x 'password generator.txt' and chmod +x 'install portainer script.txt' commands should do the trick. 
-2. Run the password generator.txt script first. It will install docker and generate the password hash for the other script. It will save at the end of the install portainer script.txt file.
-3. Use your favorite editor to go into the install portainer script.txt file.
-4. Copy the generated password hash and paste it next to the line where it says PASSWORD_HASH=. It must have the ' at the beginning and end of the password hash for this work properly.
-5. Insert your Public IP address where it says WG_HOST=. There are many ways to check for your Public IP address.
-6. Erase the PASSWORD_HASH= at the end of the file. The curl -sSL https://install.pi-hole.net | bash should be the last thing in that file.
-7. Save the configurations and exit.
-8. Run the script and follow any prompts that come up.
+**Version:** 2.0 (in development)  
+**Status:** Pre-release — service deployment automation is not yet available.
 
-If done correctly, all 4 services should be installed and ready to go. 
+## Overview
 
-Note: please make sure appropiate ports are opened from your router. You will need to open 51280 for wireguard. 
+This project began as a collection of scripts designed to simplify installing Docker, Portainer, WireGuard, and Pi-hole.
 
-Wireguard UI should be accessible from http://your_ip:51821.
+Version 2.0 focuses on:
 
-Pi-Hole UI should be accessible from http://your_ip/admin.
+- Reproducible deployments
+- Modular Docker Compose configurations
+- Secure credential management
+- Readiness assessments before installation
+- Deployment validation and troubleshooting
+- Documentation and recovery procedures
 
-Portainer UI should be accessible from https://your_ip:9443.
+## Project Status
+
+| Component | Status |
+|---|---|
+| Original scripts archive | Complete |
+| Read-only preflight assessment | Initial version validated |
+| Docker published-port inventory | Basic version implemented |
+| Docker installation workflow | Planned |
+| Portainer Compose deployment | Planned |
+| WireGuard / wg-easy deployment | Planned |
+| Pi-hole Compose deployment | Planned |
+| Automated deployment validation | Planned |
+
+**No production-ready service installer is included in v2 yet.**
+
+## Quick Start
+
+Clone the repository using:
+
+`git clone https://github.com/iireddrag0nii/scripts.git`
+
+Enter the repository:
+
+`cd scripts`
+
+Switch to the development branch when it has been published:
+
+`git switch development/v2`
+
+Check the preflight script's syntax:
+
+`bash -n scripts/preflight.sh`
+
+Run the read-only assessment:
+
+`./scripts/preflight.sh`
+
+To include the Docker container inventory when elevated permissions are required:
+
+`sudo ./scripts/preflight.sh`
+
+The script does not install software or modify running services.
+
+A successful assessment does not guarantee deployment compatibility.
+
+## Planned Components
+
+### Docker Engine
+
+Documented installation and verification workflow.
+
+### Portainer
+
+Independent container-management deployment.
+
+### WireGuard / wg-easy
+
+VPN deployment with configurable networking and restricted administration.
+
+### Pi-hole
+
+Containerized DNS filtering with persistent configuration.
+
+Each deployment will be optional.
+
+## Documentation
+
+- [Installation and prerequisites](docs/INSTALLATION.md)
+- [Security guidance](SECURITY.md)
+- [Change history](CHANGELOG.md)
+- [Original scripts](legacy/README.md)
+
+## Legacy Scripts
+
+The original installation scripts are preserved in the `legacy/` directory for historical reference.
+
+They are unmaintained and should not be used for current production deployments.
+
+## Development and Validation
+
+Development uses isolated lab environments and read-only assessments of existing Linux systems.
+
+All deployment components must be tested before being described as supported.
+
+## Project Website
+
+https://www.hbtechsolutions.com
+
+## Disclaimer
+
+This toolkit is provided for education and authorized infrastructure administration.
+
+Review all commands, configurations, and security implications before use.
