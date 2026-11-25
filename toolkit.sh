@@ -52,8 +52,8 @@ portainer_deploy() {
         return 0
     fi
 
-    if ss -H -ltn | awk '$4 ~ /:9443$/ {found=1} END {exit !found}'; then
-        echo "[BLOCKED] Host port 9443 is already listening."
+    if ! bash "$ROOT/scripts/check-portainer-conflicts.sh"; then
+        echo "[BLOCKED] Portainer deployment failed safety checks."
         return 2
     fi
 
