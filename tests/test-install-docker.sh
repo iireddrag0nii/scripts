@@ -12,7 +12,8 @@ check() {
     shift 3
 
     local output status=0
-    output=$("$SCRIPT" "$@" 2>&1) || status=$?
+    output=$(DOCKER_HOST=unix:///tmp/hbtech-test-do-not-connect.sock \
+        "$SCRIPT" "$@" 2>&1) || status=$?
 
     if [[ "$status" -eq "$expected_code" ]] &&
        [[ "$output" == *"$expected_text"* ]]; then
@@ -28,7 +29,7 @@ check() {
 }
 
 check "Installation blocked" 2 \
-    "Installation is not implemented" --install
+    "[BLOCKED]" --install
 
 check "Help available" 0 \
     "Usage:" --help
