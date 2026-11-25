@@ -186,6 +186,7 @@ run_os_test() {
 run_os_test "Ubuntu 20.04" ubuntu 20.04 MANUAL_REVIEW
 run_os_test "Debian 12" debian 12 MANUAL_REVIEW
 run_os_test "Ubuntu 24.04" ubuntu 24.04 FRESH_CANDIDATE
+run_os_test "Ubuntu 26.04" ubuntu 26.04 FRESH_CANDIDATE
 
 echo
 echo

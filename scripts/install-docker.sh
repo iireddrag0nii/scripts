@@ -72,7 +72,7 @@ arch="$(dpkg --print-architecture)"
 
 # Limit initial installation validation to tested targets.
 case "${VERSION_ID:-}:$arch" in
-    22.04:amd64|24.04:amd64|22.04:arm64|24.04:arm64) ;;
+    22.04:amd64|24.04:amd64|26.04:amd64|22.04:arm64|24.04:arm64|26.04:arm64) ;;
     *)
         echo "[BLOCKED] Release/architecture not enabled for installation."
         exit 2
