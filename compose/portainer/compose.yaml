@@ -2,7 +2,7 @@ name: hbtech-portainer
 
 services:
   portainer:
-    image: portainer/portainer-ce:lts
+    image: portainer/portainer-ce@sha256:18616fff2998f8ca0e8ebe7f028658ae1682859cf43f212f81a849c1093ad639
     restart: unless-stopped
 
     ports:
