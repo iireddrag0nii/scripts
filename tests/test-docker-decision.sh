@@ -44,10 +44,19 @@ esac
 exit 0
 MOCK
 
-chmod +x "$TMP/bin/apt-get" "$TMP/bin/systemctl" "$TMP/bin/dpkg-query" "$TMP/bin/docker"
+cat > "$TMP/bin/uname" <<'MOCK'
+#!/bin/bash
+if [[ "${1:-}" == "-m" ]]; then
+    printf '%s\n' "${MOCK_ARCH:-x86_64}"
+else
+    exit 1
+fi
+MOCK
+
+chmod +x "$TMP/bin/apt-get" "$TMP/bin/systemctl" "$TMP/bin/dpkg-query" "$TMP/bin/docker" "$TMP/bin/uname"
 
 run_test() {
-    local scenario="$1" expected="$2"
+    local scenario="$1" expected="$2" arch="${3:-x86_64}"
     local bin="$TMP/bin" output
 
     # Exclude Docker entirely for these scenarios.
@@ -56,18 +65,18 @@ run_test() {
         bin="$TMP/no-docker"
         mkdir -p "$bin"
 
-        for name in grep apt-get systemctl dpkg-query; do
+        for name in grep apt-get systemctl dpkg-query uname; do
             ln -sf "$TMP/bin/$name" "$bin/$name"
         done
     fi
 
-    output=$(SCENARIO="$scenario" PATH="$bin" \
+    output=$(SCENARIO="$scenario" MOCK_ARCH="$arch" PATH="$bin" \
         /bin/bash "$ROOT/scripts/docker-decision.sh")
 
     if grep -Fxq "DECISION: $expected" <<< "$output"; then
-        echo "[PASS] $scenario -> $expected"
+        echo "[PASS] $scenario [$arch] -> $expected"
     else
-        echo "[FAIL] $scenario -> expected $expected"
+        echo "[FAIL] $scenario [$arch] -> expected $expected"
         printf '%s\n' "$output"
         return 1
     fi
@@ -112,4 +121,11 @@ run_os_test "Debian 12" debian 12 MANUAL_REVIEW
 run_os_test "Ubuntu 24.04" ubuntu 24.04 FRESH_CANDIDATE
 
 echo
-echo "All eight decision tests passed."
+echo
+echo "=== Architecture compatibility tests ==="
+
+run_test installed SKIP_INSTALL aarch64
+run_test installed MANUAL_REVIEW armv7l
+
+echo
+echo "All ten decision tests passed."

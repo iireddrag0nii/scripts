@@ -44,6 +44,9 @@ if command -v dpkg-query >/dev/null 2>&1; then
     done
 fi
 
+arch="$(uname -m 2>/dev/null || printf 'unknown')"
+
+printf 'Architecture: %s\n' "$arch"
 printf 'OS: %s %s\n' "$os_id" "$os_version"
 printf 'Docker CLI: %s | Compose: %s\n' "$docker_cli" "$compose"
 printf 'Daemon accessible: %s | Service active: %s\n' "$daemon" "$service"
@@ -56,6 +59,9 @@ if [[ "$os_id" != "ubuntu" ]]; then
 elif [[ ! " 22.04 24.04 26.04 26.10 " =~ " $os_version " ]]; then
     echo "DECISION: MANUAL_REVIEW"
     echo "Reason: Ubuntu release has not been approved for this workflow."
+elif [[ "$arch" != "x86_64" && "$arch" != "aarch64" ]]; then
+    echo "DECISION: MANUAL_REVIEW"
+    echo "Reason: CPU architecture has not been validated."
 elif (( docker_cli && compose && daemon && service )); then
     echo "DECISION: SKIP_INSTALL"
     echo "Reason: Docker Engine and Compose are functioning."
