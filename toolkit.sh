@@ -82,6 +82,58 @@ status() {
     docker compose -f "$PORTAINER" ps
 }
 
+docker_install_menu() {
+    echo
+    echo "=== Docker Engine Installation ==="
+
+    local plan decision
+    local plan_status=0
+    plan="$(bash "$ROOT/scripts/install-docker.sh" --plan 2>&1)" || plan_status=$?
+    printf '%s\n' "$plan"
+
+    if (( plan_status != 0 )); then
+        echo "[BLOCKED] Docker assessment returned exit code $plan_status."
+        return "$plan_status"
+    fi
+
+    decision="$(printf '%s\n' "$plan" |
+        awk '/^DECISION: / {print $2}')"
+
+    case "$decision" in
+        SKIP_INSTALL)
+            echo "[SKIP] Docker is already operational."
+            return 0
+            ;;
+        MANUAL_REVIEW)
+            echo "[BLOCKED] Docker installation requires manual review."
+            return 2
+            ;;
+        FRESH_CANDIDATE)
+            ;;
+        *)
+            echo "[ERROR] Unexpected Docker installation decision."
+            return 2
+            ;;
+    esac
+
+    if (( EUID != 0 )); then
+        echo "[BLOCKED] Launch the toolkit with sudo to install Docker."
+        return 2
+    fi
+
+    echo
+    read -r -p "Proceed to guarded Docker installation? [y/N]: " answer
+
+    case "$answer" in
+        y|Y|yes|YES)
+            bash "$ROOT/scripts/install-docker.sh" --install
+            ;;
+        *)
+            echo "[CANCELLED] No installation requested."
+            ;;
+    esac
+}
+
 run_menu_action() {
     local result=0
 
@@ -98,7 +150,7 @@ menu() {
     while true; do
         header
         echo "1. Check host readiness"
-        echo "2. Plan Docker installation"
+        echo "2. Install Docker Engine"
         echo "3. Deploy Portainer"
         echo "4. Deploy Pi-hole (coming soon)"
         echo "5. Deploy WireGuard (coming soon)"
@@ -109,7 +161,7 @@ menu() {
 
         case "$choice" in
             1) run_menu_action bash "$ROOT/scripts/preflight.sh" ;;
-            2) run_menu_action bash "$ROOT/scripts/install-docker.sh" --plan ;;
+            2) run_menu_action docker_install_menu ;;
             3) run_menu_action portainer_deploy ;;
             4|5) echo "[INFO] Not implemented. No changes made." ;;
             6) status ;;
